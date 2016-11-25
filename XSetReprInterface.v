@@ -78,15 +78,6 @@ Qed.
 End DRTspec.
 
 
-Module Type WSetsRepr <: WSets.
-
-Declare Module E : DecidableType.
-Declare Module E' : DecidableReprType E.
-Include WSetsOn E.
-
-End WSetsRepr.
-
-
 
 Module Type OrderedReprType (E : DecidableType) <: OrderedType.
 
@@ -143,10 +134,3 @@ Qed.
 
 End OrderedRepr2Type.
 
-
-Module Type SetsRepr (T : DecidableType) (E' : OrderedReprType T) <: Sets.
-
-Module E := OrderedRepr2Type T E'.
-Include SetsOn E.
-
-End SetsRepr.

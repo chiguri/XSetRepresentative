@@ -1,10 +1,11 @@
+(* Currently only wrapper for WSet is implemented *)
+
 Require Import XSetInterface.
 Require Import XSetReprInterface.
 
-Module WRawSetReprWrapper (X : DecidableType) (X' : DecidableReprType X) (F : WSetsOn) <: WRawSets X.
+Module WRawSetReprWrapper (X : DecidableType) (X' : DecidableReprType X) (WS : WSetsOn X') <: WRawSets X.
 
 
-Module WS := F X'.
 Module Xspec := DRTspec X X'.
 
 Definition elt := X.t.
@@ -534,10 +535,16 @@ Qed.
 End WRawSetReprWrapper.
 
 
+Module WRawSetReprGenerator (X : DecidableType) (X' : DecidableReprType X) (F : WSetsOn) <: WRawSets X.
+
+Module WS := F X'.
+Include WRawSetReprWrapper X X' WS.
+
+End WRawSetReprGenerator.
 
 
 Module WSetReprWrapper (X : DecidableType) (X' : DecidableReprType X) (F : WSetsOn) <: WSetsOn X.
-Module R := WRawSetReprWrapper X X' F.
+Module R := WRawSetReprGenerator X X' F.
 Include WRaw2SetsOn X R.
 End WSetReprWrapper.
 
@@ -549,4 +556,56 @@ Include WSetReprWrapper X X' F.
 End MakeWSetRepr.
 
 
+(*
 
+Module RawSetReprWrapper (X : DecidableType) (X' : OrderedReprType X) (S : SetsOn X').
+
+Module O := OrderedRepr2Type X X'.
+(** [O] cannot occur in the type of this functor, so we implement RawSets as another module in this functor. *)
+
+Module Raws <: RawSets O.
+Include WRawSetReprWrapper X X' S.
+
+Definition compare := S.compare.
+Definition min_elt := S.min_elt.
+Definition max_elt := S.max_elt.
+
+Definition Ok' s := forall x : elt, S.In (#x) s -> X'.eq x (#x).
+
+
+Definition lt s s' := Ok' s /\ Ok' s' /\ S.lt s s'.
+Lemma lt_strorder : StrictOrder lt.
+constructor.
+ compute.
+  intros x [H1 [H2 H3]].
+   revert H3.
+    now apply S.lt_strorder.
+ compute.
+  intros x y z [H1l [H1c H1r]] [H2l [H2c H2r]].
+   split; auto; split; auto.
+    apply S.lt_strorder with y; now auto.
+Qed.
+
+Lemma lt_compat : Proper (Equal ==> Equal ==> iff) lt.
+compute; intros s t Hst s' t' Hst'.
+ split.
+  intros [Hl [Hc Hr]].
+   split; [ | split].
+    intros x Hx.
+
+
+    apply Hl.
+(* 原因はおおよそわかるが、Equalがかなり強烈な意味を持っているので現状無理。ltの意味を変える？ *)
+
+    destruct H with x1.
+     apply Hl.
+     apply H5 in H3.
+apply S.lt_compat.
+compute.
+
+End Raws.
+
+End RawSetReprWrapper.
+
+
+*)
